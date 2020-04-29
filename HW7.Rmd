@@ -1,0 +1,185 @@
+---
+title: "HW7"
+author: "Enguang Fan"
+date: "3/19/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+## City crime data
+0. Inspect the help file of the **all.us.city.crime.1970** data in the **cluster.datasets** package to familiarize yourself with it. We will be clustering cities based on the crime rate variables in columns 5-10.
+
+```{r}
+library(cluster.datasets)
+set.seed(5)
+data(all.us.city.crime.1970)
+help(all.us.city.crime.1970)
+#df <- data(all.us.city.crime.1970)
+```
+
+
+1. For K=2,3,4,...,10 find the within cluster sum of squares and plot this against K. Based on this, what would be a reasonable number of clusters?
+
+```{r}
+## save WSS(K) for K=2,10)
+WSS=NULL
+for(K in 2:10){
+ kms=kmeans(all.us.city.crime.1970[,5:10],centers=K,nstart=10)
+ wssk=sum(kms$withinss)
+ WSS=c(WSS,wssk)
+}
+
+plot(c(2:10),WSS,xlab="K",ylab="WSS(K)")
+```
+There is an elbow when K = 4 or 5, so I'd use K = 4
+
+
+2. Find the K-means solution for the number K you found in 1. Which cities go in which clusters?
+
+```{r}
+set.seed(5)
+cityclusters=kmeans(all.us.city.crime.1970[,5:10],centers=4)
+city = all.us.city.crime.1970[,1]
+```
+
+```{r}
+print("cities in cluster 1")
+city[cityclusters$cluster==1]
+```
+
+```{r}
+print("cities in cluster 2")
+city[cityclusters$cluster==2]
+```
+
+```{r}
+print("cities in cluster 3")
+city[cityclusters$cluster==3]
+```
+
+```{r}
+print("cities in cluster 4")
+city[cityclusters$cluster==4]
+```
+
+
+
+
+3. Now find K based on maximizing the average silhouette. What is the optimal K based on this criterion?
+
+```{r}
+set.seed(5)
+#use the function from lecture notes
+avsil=function(x,kmobject){
+## x is the raw data
+## kmobject is the resulting list after running kmeans
+ n=nrow(x)
+ K=length(kmobject$size)
+ sils=c(1:n)
+for(i in 1:n){
+ distvals=c(1:K)
+for(k in 1:K){
+ distvals[k]=sum((x[i,]-kmobject$centers[k,])^2)
+ }
+ distvals=sort(distvals)
+ sils[i]=(distvals[2]-distvals[1])/distvals[2]
+ }
+return(mean(sils))
+}
+
+AS=c(1:9)
+for(k in 2:10){
+ km=kmeans(all.us.city.crime.1970[,5:10],centers=k,nstart=10)
+ AS[k-1]=avsil(all.us.city.crime.1970[,5:10],km)
+}
+plot(c(2:10),AS)
+
+```
+
+The optimal K = 5
+
+4. Repeat 1 and 2, but after standardizing each variable and replacing them with z-scores. Variables with higher variances could dominate the euclidean distances used in creating clusters. Did K change? What about the cluster memberships?
+
+```{r}
+set.seed(5)
+#standardized the data 
+df = all.us.city.crime.1970
+df1 = all.us.city.crime.1970
+#head(df,5)
+dim(df)
+for (i in 5:10) {
+  df[,i] = (df1[,i] - mean(df1[,i])) / sd(df1[,i])
+}
+#df[,5] = (df1[,5] - mean(df1[,5])) / sd(df1[,5])
+```
+
+```{r}
+#use WSS against K plot
+## save WSS(K) for K=2,10)
+WSS=NULL
+for(K in 2:10){
+ kms=kmeans(df[,5:10],centers=K,nstart=10)
+ wssk=sum(kms$withinss)
+ WSS=c(WSS,wssk)
+}
+
+plot(c(2:10),WSS,xlab="K",ylab="WSS(K)")
+```
+
+```{r}
+#by maximizing the average silhouette
+AS=c(1:9)
+for(k in 2:10){
+ km=kmeans(df[,5:10],centers=k,nstart=10)
+ AS[k-1]=avsil(df[,5:10],km)
+}
+plot(c(2:10),AS)
+```
+
+We use K = 10
+```{r}
+set.seed(5)
+cityclusters=kmeans(df[,5:10],centers=10)
+city = all.us.city.crime.1970[,1]
+
+
+city[cityclusters$cluster==1]
+city[cityclusters$cluster==2]
+city[cityclusters$cluster==3]
+city[cityclusters$cluster==4]
+city[cityclusters$cluster==5]
+city[cityclusters$cluster==6]
+city[cityclusters$cluster==7]
+city[cityclusters$cluster==8]
+city[cityclusters$cluster==9]
+city[cityclusters$cluster==10]
+```
+
+
+
+
+5. Using these standardized data inspect the cluster means and use them to describe differences between clusters.
+
+```{r}
+set.seed(5)
+km=kmeans(df[,5:10],centers=10,nstart=10)
+km
+```
+So the 1st cluster means has the biggest murder rate
+       2nd cluster means has the biggest rape rate
+       3rd cluster means has the biggest assult rate
+       4th cluster means has the second biggest burglary rate
+       5th cluster means has the robbery murder rate
+       
+       cities above representing cities with serious crimes
+       
+       6th cluster means has the biggest car theft rate
+       7th cluster means has decrease in all other crime but increase in car theft, representing cities with mild crime
+       8th cluster means has decrease in all crime rates
+       9th cluster means has mild increase in most crime rate
+       10th cluster means has the lowest rape and murder rate, representing good cities.
+
+

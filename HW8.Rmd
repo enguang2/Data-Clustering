@@ -1,0 +1,171 @@
+---
+title: "STAT430_HW8"
+author: "Enguang Fan"
+date: "4/6/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+```{r}
+url='http://www.biz.uiowa.edu/faculty/jledolter/DataMining/protein.csv'
+protein=read.csv(url)
+head(protein)
+```
+
+```{r}
+standprotein = protein
+#let us standardized the data
+for (i in 2:9) {
+  standprotein[,i] = (protein[,i] - mean(protein[,i]))/sd(protein[,i])
+}
+head(standprotein)
+```
+```{r}
+countries=protein[,1]
+clust=hclust(dist(standprotein[,2:10]),method="complete")
+plot(clust,labels=countries)
+```
+
+
+##2
+```{r}
+## look at fusion coefficients
+fusion=clust$height
+n=nrow(protein)
+clusters=(n-1):1
+plot(clusters,fusion)
+```
+I will choose cluster numbers = 12
+Justification: Because of the standardized of the data, the curve is flattened compared to the one we see in lecture, so In this plot, there is no obvious elbow, I will choose cluster numbers = 12
+
+## 3
+
+```{r}
+twelveclust=cutree(clust,k=12)
+## Check countries in cluster 3, for example
+twelveclust
+```
+```{r}
+countries[twelveclust==1]
+```
+
+```{r}
+twelveclust[10]
+```
+
+
+```{r}
+#record how many countries each clusters
+size = rep(0,12)
+
+result = data.frame(matrix(0, nrow = 12, ncol = 9))
+#df delete the country
+df = standprotein[,2:10]
+```
+```{r}
+for (i in 1:25) {
+  for (c in 1:12) {
+    if (twelveclust[i] == c) {
+      result[c,] = df[i,] + result[c,]
+      size[c] = size[c] +1
+    }
+  }
+}
+```
+
+
+```{r}
+#calculate the mean value
+for (i in 1:12) {
+  result[i,] = result[i,] / size[i]
+}
+names(standprotein)
+finalresult = setNames(result, c( "RedMeat",   "WhiteMeat", "Eggs"   ,   "Milk"     , "Fish"    ,  "Cereals"  , "Starch"   , "Nuts"  ,    "Fr.Veg"))
+finalresult 
+```
+
+```{r}
+
+for (i in 1:12) {
+  print(countries[twelveclust==i])
+}
+
+```
+
+Cluster 1: Albania very low whitemeat, eggs, milk, fish, starch. This cluster's country has relatively low protein and meat in the diet, possibly due to their awful economic situation
+
+Cluster 2: decent amount of white meat eggs and milk but low fish, diet has many protein input but low seafood possibly due to its geolocation
+
+Cluster 3: a lot of red meat, decent number of whitemeat eggs and milk, low in fish and cereals, the life quality is pretty good
+
+Cluster 4: low in red and white meat, also eggs, milk and fish. Whereas abundant cereals, this clusters has poor Animal husbandry but strong crop farming
+
+Cluster 5: low in redmeat, decent amout in whitemeat, eggs starch, life quality and economic situation should be good so people is stopping eating redmeat for their health
+
+Cluster 6:high in milk and fish, possibly near the ocean so the seafood is abundant, also has good Dairy industry
+
+Cluster 7: decent amount of red and white meat, eggs fish and milk, should be a developed country and diet has a lot protein
+
+Cluster 8: low in meat, egg and milk but high in fish, possibly near coast but has poor Animal husbandry and crop industry.
+
+Cluster 9: :high in milk and fish, possibly near the ocean so the seafood is abundant, also has good Dairy industry
+
+Cluster 10: low in meat, egg and milk but high in fish, possibly near coast so has some fish but has poor Animal husbandry and crop industry.
+
+Cluster 11: low in red meat, egg and milk but high in fish, possibly near coast but has poor Animal husbandry and crop industry.
+
+Cluster 12: low in red meat, egg and milk but high in fish, possibly near coast but has poor Animal husbandry and crop industry.
+
+##4
+```{r}
+#countries=protein[,1]
+singleclust=hclust(dist(standprotein[,2:10]),method="single")
+plot(singleclust,labels=countries)
+```
+
+```{r}
+sing=cutree(singleclust,k=12)
+## Check countries in cluster 3, for example
+for (i in 1:12) {
+  print(countries[sing==i])
+}
+
+
+```
+Comparison:
+The differenc is not drastic, since there are 12 clusters which is quite large if considered the size is 25, so the number of countries in each cluster will tend to be quite small, and therefore, the distance between clusters by using single and complete linkage will not be so different.
+
+## 5
+```{r}
+set.seed(5)
+cityclusters=kmeans(standprotein[,2:10],centers=12)
+
+
+
+countries[cityclusters$cluster==1]
+countries[cityclusters$cluster==2]
+countries[cityclusters$cluster==3]
+countries[cityclusters$cluster==4]
+countries[cityclusters$cluster==5]
+countries[cityclusters$cluster==6]
+countries[cityclusters$cluster==7]
+countries[cityclusters$cluster==8]
+countries[cityclusters$cluster==9]
+countries[cityclusters$cluster==10]
+countries[cityclusters$cluster==11]
+countries[cityclusters$cluster==12]
+#countries[cityclusters$cluster==13]
+```
+Similarities: The K-means and complete linkage analysis both generate clusters in which the number is quite average, the number of countries range from 1 to 4, and the cluster is actually quite similar, like France and USSR are longly cluster in both methods. And Greece with Italy cluster also didn't change.
+
+Differences: They generate quite different clusters, e.g. Albania is a solely cluster by complete linkage analysis but in k-means it's in cluster with Bulgaria   Romania    Yugoslavia. In complete linkage analysis, Finland is with Swedena and Danmark yet in K-means it's lonly cluster.
+
+
+
+
+
+

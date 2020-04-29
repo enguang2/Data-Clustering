@@ -1,0 +1,188 @@
+---
+title: "hw10"
+author: "Enguang Fan"
+date: "4/22/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(poLCA)
+```
+
+
+
+
+
+
+
+```{r}
+data("carcinoma")
+carcinoma
+# 1 for no   2 for yes
+```
+```{r}
+dim(carcinoma)
+```
+
+```{r}
+freq = rep(0,7)
+
+```
+```{r}
+for (i in 1:7) {
+  df = carcinoma[,i]
+  df = df-1
+  freq[i] = sum(df)/118
+}
+```
+
+```{r}
+freq
+```
+```{r}
+freqmtx =as.data.frame(freq)
+row.names(freqmtx) = c('a','b','c','d','e','f','g')
+freqmtx
+```
+
+```{r}
+barplot(freqmtx[,1])
+```
+Based on the bar plot, pathologist A B E and G give quite similar number of patients whereas C , D and F give smaller number, I'd say It seems to be a normal distribution
+## 2
+```{r}
+f=cbind(A,B,C,D,E,F,G)~1
+twoclass=poLCA(f,carcinoma,nclass=2,maxiter=1000)
+```
+Obviously, these two classes should be interpred as have or does not have cancer. class 1 has a quite large pi value for Pr(2) and class 2 has large value for Pr(1) since Pr(2) is predicted as has cancer and Pr(1) is predicted to be healthy, we would conclude that class 1 is classified as has cancer and class 2 doesn't.
+
+class 2 is good, class 1 is bad
+## 3
+for patient from class 1
+The expectation is 5.6864
+```{r}
+class1_expec = 1+0.9831+0.7609+0.5411+0.9786+0.4227+1
+class1_expec
+```
+
+for patient from class 2
+The expectation is 0.8103
+```{r}
+class2_expec = 0.1165+0.3544+0.2229+0.1165
+class2_expec
+```
+## 4
+```{r}
+newdf = carcinoma
+newdf[,'sum'] = newdf[,1]+newdf[,2]+newdf[,3]+newdf[,4]+newdf[,5]+newdf[,6]+newdf[,7]
+newdf
+```
+
+for class 1(has cancer), P(sum = 0)
+```{r}
+predicted = twoclass$predclass
+predicted
+```
+```{r}
+count1 = rep(0,8)
+for (j in 7:14) {
+  for (i in 1:118) {
+  if (predicted[i] == 1) {
+    if (newdf[i,8] == j) {
+      count1[j-6] = count1[j-6]+1
+    }
+  }
+}
+}
+
+```
+```{r}
+count1
+```
+
+```{r}
+count0 = rep(0,8)
+for (j in 7:14) {
+  for (i in 1:118) {
+  if (predicted[i] == 2) {
+    if (newdf[i,8] == j) {
+      count0[j-6] = count0[j-6]+1
+    }
+  }
+}
+}
+count0
+```
+
+```{r}
+result = cbind(count1,count0)
+result = result/59
+result
+resultmtx = as.data.frame(result)
+#row.names(resultmtx,c(0:7))
+
+resultmtx[,3]=c(0:7)
+names(resultmtx)[3] = 'sum'
+resultmtx
+```
+
+
+
+
+
+
+## 5
+
+```{r}
+predicted = twoclass$predclass
+```
+```{r}
+predicted
+```
+```{r}
+length(predicted)
+```
+```{r}
+#relabel of result
+for (i in 1:118) {
+  if (predicted[i] == 2) {
+    predicted[i] = 1
+  } else {
+    predicted[i] = 2
+  }
+}
+```
+```{r}
+predicted
+```
+```{r}
+table(predicted,carcinoma$A)
+```
+```{r}
+table(predicted,carcinoma$B)
+```
+```{r}
+table(predicted,carcinoma$C)
+```
+```{r}
+table(predicted,carcinoma$D)
+```
+```{r}
+table(predicted,carcinoma$E)
+```
+```{r}
+table(predicted,carcinoma$F)
+```
+```{r}
+table(predicted,carcinoma$G)
+```
+F seems to least in agreement with the model since the different predicted number is largest, which is 34
+
+
+
+

@@ -1,0 +1,119 @@
+---
+title: "430_hw9"
+author: "Enguang Fan"
+date: "4/14/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+
+```{r}
+library(ISLR)
+library(mclust)
+```
+```{r}
+data(Hitters)
+Hitters=Hitters[,c(1:7)]
+Hitters=na.omit(Hitters)
+```
+```{r}
+BIC=mclustBIC(Hitters)
+plot(BIC)
+```
+```{r}
+summary(BIC)
+```
+The VEE assumption with clusters = 3 has the highest BIC
+
+##2
+```{r}
+mod1=Mclust(Hitters,G=3,modelNames=c("VEE"))
+summary(mod1,parameters=TRUE)
+```
+```{r}
+names(mod1)
+```
+
+
+
+```{r}
+cluster1 = subset(Hitters,mod1$classification ==1)
+cluster2 = subset(Hitters,mod1$classification ==2)
+cluster3 = subset(Hitters,mod1$classification ==3)
+
+```
+```{r}
+cov(cluster1)
+cov(cluster2)
+cov(cluster3)
+```
+```{r}
+summary(mod1,parameters=TRUE)
+```
+
+
+Conclusion: The variance matrix from first and second cluster are quite similar yet the third cluster's variance matrix is somewhat different with other clusters. This is consistent to what we we observe from the scatter plot from #3, the red and blue clusters have similar variance while green cluster has much bigger variance.
+
+Interestingly, we find that the variance matrix derived from calculating each cluster separately is slightly different to the one we get from summary table, it could due to the rounding problem, hence we still use the one we get from summary table(though the mean value is the same).
+
+##3
+```{r}
+plot(mod1,what = "classification")
+```
+
+```{r}
+
+clPairs(Hitters[1:7],mod1$classification)
+```
+The scatter plot provide us with some intuitive evidence about how the clustes are classified.
+
+The blue clusters represent the players who play relatively less years(around 0~10years), also their performance in 1986 are mediocre, the bat number, hit number, run and homerun number are less than other clusters. In all, they are just mediocre players in league.
+
+The red clusters represent the players who play much longer years than other two cluster(around 10~20 years), yet their performance are not so good, with quite similar performance in 1986 with the blue clusters in term of bat number, hit number, run and homerun number . In all, these play longer time in league but has normal performance in 1986, possibly because the physical problems like injury caused by aging problem.
+
+The green cluster has most players, who has best performance based on their bat number, hit number, run and homerun numbers. Most of them has not very long career(around 0-10years) yet some of them play a much longer career around 15 years. This make sense cause the peak of a player will not last very long yet some of star players did have better performance and longer career.
+
+
+##4
+```{r}
+mod2=Mclust(Hitters,G=3,modelNames=c("VII"))
+summary(mod2,parameters=TRUE)
+```
+
+```{r}
+plot(mod2,what = "classification")
+```
+1. The number of three clusters are very similar, which is  87 109 126. 
+2. The covariance between different variables are all 0, this is because of the VII model
+3. In separate clusters, different variables have same variance, making diagnol variance matrix, this is because of the VII model
+```{r}
+clPairs(Hitters[1:7],mod2$classification)
+```
+
+
+
+##5
+```{r}
+mod2$bic
+```
+```{r}
+mod1$bic
+```
+```{r}
+mod1$df
+```
+```{r}
+mod2$df
+```
+The new model has smaller df than best model, so best model has fewer parameters.
+
+
+
+
+
+
+
